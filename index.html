@@ -1,0 +1,529 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#123c43">
+    <title>La isla del tesoro</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #173a3d;
+        --muted: #648080;
+        --cream: #fffaf0;
+        --sea: #123c43;
+        --gold: #f3bd55;
+        --tile-size: clamp(29px, 7.8vw, 52px);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 28px 18px 36px;
+        color: var(--ink);
+        background:
+          radial-gradient(ellipse at 50% 0%, #fff8df 0, transparent 48%),
+          #e7f2e8;
+        font-family: ui-rounded, "Avenir Next", Avenir, system-ui, sans-serif;
+      }
+
+      button { font: inherit; }
+
+      .game {
+        width: min(100%, 960px);
+        margin: 0 auto;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        color: var(--sea);
+        font-size: .82rem;
+        font-weight: 850;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 40px;
+        height: 40px;
+        place-items: center;
+        border-radius: 14px;
+        background: var(--sea);
+        color: var(--gold);
+        font-size: 1.35rem;
+      }
+
+      .restart {
+        border: 1px solid #c8d9d2;
+        border-radius: 999px;
+        padding: 10px 15px;
+        background: #ffffffb8;
+        color: var(--ink);
+        cursor: pointer;
+        font-size: .9rem;
+        font-weight: 750;
+        transition: transform .18s ease, background .18s ease;
+      }
+
+      .restart:hover { transform: translateY(-2px); background: white; }
+      button:focus-visible { outline: 3px solid #e8a82f; outline-offset: 3px; }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 278px;
+        align-items: start;
+        gap: 18px;
+      }
+
+      .board-card, .panel {
+        border: 1px solid #d5e2d8;
+        border-radius: 24px;
+        background: #fffdf8;
+        box-shadow: 0 16px 40px #234d3820;
+      }
+
+      .board-card { overflow: hidden; }
+
+      .board-heading {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 25px 27px 19px;
+      }
+
+      h1 {
+        margin: 0;
+        color: var(--sea);
+        font-size: clamp(1.7rem, 4vw, 2.45rem);
+        letter-spacing: -.045em;
+        line-height: 1.08;
+      }
+
+      .subtitle {
+        margin: 8px 0 0;
+        color: var(--muted);
+        font-size: .97rem;
+        line-height: 1.45;
+      }
+
+      .compass {
+        flex: 0 0 auto;
+        display: grid;
+        width: 48px;
+        height: 48px;
+        place-items: center;
+        border: 1px solid #f1dfb8;
+        border-radius: 16px;
+        background: #fff4d8;
+        font-size: 1.45rem;
+        transition: transform .25s ease;
+      }
+
+      .map-wrap {
+        overflow: auto;
+        padding: 0 16px 18px;
+      }
+
+      .map {
+        display: grid;
+        grid-template-columns: repeat(9, var(--tile-size));
+        grid-template-rows: repeat(9, var(--tile-size));
+        justify-content: center;
+        gap: 4px;
+        width: max-content;
+        margin: 0 auto;
+        padding: 10px;
+        border: 1px solid #b8d5c7;
+        border-radius: 18px;
+        background: #d7eddf;
+      }
+
+      .tile {
+        display: grid;
+        width: var(--tile-size);
+        height: var(--tile-size);
+        place-items: center;
+        border: 0;
+        border-radius: 10px;
+        background: #b7d9ad;
+        color: #527a54;
+        font-size: clamp(14px, 4vw, 23px);
+        transition: background .16s ease, transform .16s ease;
+      }
+
+      .tile.unknown { background: #5e9d8e; color: #d8f2d5; }
+      .tile.sand { background: #f4d893; }
+      .tile.grass { background: #b8dca5; }
+      .tile.forest { background: #80b88c; }
+      .tile.rock { background: #c5d0bd; }
+      .tile.path { background: #e7c77f; }
+      .tile.player { z-index: 1; background: #f6c95f; box-shadow: inset 0 0 0 3px #fff8dd; }
+      .tile.treasure { background: #ffd879; animation: treasure-glow 1.2s ease-in-out infinite alternate; }
+
+      @keyframes treasure-glow {
+        to { box-shadow: 0 0 0 4px #f4bd5566, inset 0 0 0 2px #fff6cf; }
+      }
+
+      .map-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 0 24px 19px;
+        color: var(--muted);
+        font-size: .8rem;
+      }
+
+      .legend { display: flex; flex-wrap: wrap; gap: 12px; }
+      .legend span { display: inline-flex; align-items: center; gap: 5px; }
+
+      .panel { padding: 22px; }
+
+      .panel-label {
+        margin: 0 0 12px;
+        color: #78908a;
+        font-size: .72rem;
+        font-weight: 850;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+      }
+
+      .clue {
+        min-height: 100px;
+        margin-bottom: 17px;
+        border-radius: 17px;
+        padding: 15px;
+        background: #f1f7ed;
+      }
+
+      .clue strong {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--sea);
+        font-size: 1.02rem;
+      }
+
+      .clue p {
+        margin: 0;
+        color: #607a73;
+        font-size: .88rem;
+        line-height: 1.5;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+        margin-bottom: 17px;
+      }
+
+      .stat {
+        border: 1px solid #e1e9df;
+        border-radius: 14px;
+        padding: 12px;
+        background: white;
+      }
+
+      .stat span {
+        display: block;
+        margin-bottom: 4px;
+        color: #78908a;
+        font-size: .72rem;
+        font-weight: 750;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+      }
+
+      .stat strong { color: var(--sea); font-size: 1.2rem; }
+
+      .controls-title {
+        margin: 0 0 10px;
+        color: var(--sea);
+        font-size: .88rem;
+        font-weight: 800;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(3, 43px);
+        grid-template-rows: repeat(2, 43px);
+        justify-content: center;
+        gap: 6px;
+      }
+
+      .move {
+        border: 1px solid #c8d9d0;
+        border-radius: 12px;
+        background: white;
+        color: var(--sea);
+        cursor: pointer;
+        font-size: 1.1rem;
+        font-weight: 800;
+        transition: background .15s ease, transform .15s ease;
+      }
+
+      .move:hover:not(:disabled) { transform: translateY(-2px); background: #eff7eb; }
+      .move:disabled { cursor: default; opacity: .4; }
+      .up { grid-column: 2; grid-row: 1; }
+      .left { grid-column: 1; grid-row: 2; }
+      .down { grid-column: 2; grid-row: 2; }
+      .right { grid-column: 3; grid-row: 2; }
+
+      .keyboard-hint {
+        margin: 12px 0 0;
+        color: #82948d;
+        font-size: .75rem;
+        text-align: center;
+      }
+
+      .message {
+        min-height: 21px;
+        margin: 15px 0 0;
+        color: #53766e;
+        font-size: .82rem;
+        text-align: center;
+      }
+
+      @media (max-width: 720px) {
+        body { padding: 18px 12px 28px; }
+        .layout { grid-template-columns: 1fr; }
+        .panel { display: grid; grid-template-columns: 1fr 1fr; gap: 0 17px; }
+        .panel-label { grid-column: 1 / -1; }
+        .clue { grid-column: 1 / -1; min-height: auto; }
+        .stats { align-self: start; }
+        .controls-wrap { align-self: start; }
+      }
+
+      @media (max-width: 420px) {
+        :root { --tile-size: 30px; }
+        .board-heading { padding: 20px 17px 15px; }
+        .map-wrap { padding-right: 8px; padding-left: 8px; }
+        .map { gap: 3px; padding: 7px; }
+        .map-footer { padding: 0 15px 16px; }
+        .legend { gap: 8px; }
+        .panel { padding: 17px; }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="game">
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark" aria-hidden="true">✦</span> Expedición isleña</div>
+        <button class="restart" id="restart" type="button">↻ Nueva aventura</button>
+      </header>
+
+      <div class="layout">
+        <section class="board-card" aria-labelledby="title">
+          <div class="board-heading">
+            <div>
+              <h1 id="title">La isla del tesoro</h1>
+              <p class="subtitle">Explora la isla y sigue las pistas para encontrar el cofre.</p>
+            </div>
+            <div class="compass" id="compass" aria-label="Brújula apuntando al tesoro">🧭</div>
+          </div>
+          <div class="map-wrap">
+            <div class="map" id="map" role="grid" aria-label="Mapa de la isla"></div>
+          </div>
+          <div class="map-footer">
+            <span>Tu expedición</span>
+            <div class="legend" aria-label="Leyenda del mapa">
+              <span>🧭 Explorador</span><span>🌫️ Sin explorar</span>
+            </div>
+          </div>
+        </section>
+
+        <aside class="panel" aria-label="Pistas y controles">
+          <p class="panel-label">Diario de exploración</p>
+          <div class="clue" aria-live="polite">
+            <strong id="clue-title">La aventura comienza</strong>
+            <p id="clue-text">El mapa guarda un secreto. Muévete por la isla y deja que la brújula te guíe.</p>
+          </div>
+          <div class="stats">
+            <div class="stat"><span>Pasos</span><strong id="steps">0</strong></div>
+            <div class="stat"><span>Isla explorada</span><strong id="explored">1%</strong></div>
+          </div>
+          <div class="controls-wrap">
+            <p class="controls-title">Mover explorador</p>
+            <div class="controls" aria-label="Controles de movimiento">
+              <button class="move up" data-dx="0" data-dy="-1" aria-label="Mover arriba">↑</button>
+              <button class="move left" data-dx="-1" data-dy="0" aria-label="Mover a la izquierda">←</button>
+              <button class="move down" data-dx="0" data-dy="1" aria-label="Mover abajo">↓</button>
+              <button class="move right" data-dx="1" data-dy="0" aria-label="Mover a la derecha">→</button>
+            </div>
+            <p class="keyboard-hint">También puedes usar las flechas o WASD.</p>
+          </div>
+          <p class="message" id="message" role="status"></p>
+        </aside>
+      </div>
+    </main>
+
+    <script>
+      (() => {
+        const SIZE = 9;
+        const TOTAL = SIZE * SIZE;
+        const map = document.querySelector("#map");
+        const stepsOutput = document.querySelector("#steps");
+        const exploredOutput = document.querySelector("#explored");
+        const clueTitle = document.querySelector("#clue-title");
+        const clueText = document.querySelector("#clue-text");
+        const compass = document.querySelector("#compass");
+        const message = document.querySelector("#message");
+        const movementButtons = [...document.querySelectorAll(".move")];
+        const tiles = [];
+        const terrain = [];
+        let player;
+        let treasure;
+        let steps;
+        let visited;
+        let finished;
+
+        const key = ({ x, y }) => `${x},${y}`;
+
+        function createMap() {
+          map.replaceChildren();
+          tiles.length = 0;
+          terrain.length = 0;
+          for (let y = 0; y < SIZE; y += 1) {
+            for (let x = 0; x < SIZE; x += 1) {
+              const tile = document.createElement("div");
+              tile.className = "tile unknown";
+              tile.setAttribute("role", "gridcell");
+              tile.setAttribute("aria-label", "Terreno sin explorar");
+              map.append(tile);
+              tiles.push(tile);
+              const pattern = (x * 7 + y * 11 + x * y) % 13;
+              terrain.push(pattern < 3
+                ? { name: "bosque", icon: "🌴", className: "forest" }
+                : pattern < 5
+                  ? { name: "arena", icon: "·", className: "sand" }
+                  : pattern === 8
+                    ? { name: "rocas", icon: "🪨", className: "rock" }
+                    : pattern === 11
+                      ? { name: "sendero", icon: "·", className: "path" }
+                      : { name: "pradera", icon: "🌿", className: "grass" });
+            }
+          }
+        }
+
+        function startGame() {
+          player = { x: 4, y: 4 };
+          do {
+            treasure = { x: Math.floor(Math.random() * SIZE), y: Math.floor(Math.random() * SIZE) };
+          } while (key(treasure) === key(player));
+          steps = 0;
+          visited = new Set([key(player)]);
+          finished = false;
+          clueTitle.textContent = "La aventura comienza";
+          clueText.textContent = "El mapa guarda un secreto. Muévete por la isla y deja que la brújula te guíe.";
+          message.textContent = "Encuentra el cofre escondido en algún lugar de la isla.";
+          render();
+        }
+
+        function render() {
+          for (let i = 0; i < TOTAL; i += 1) {
+            const x = i % SIZE;
+            const y = Math.floor(i / SIZE);
+            const tile = tiles[i];
+            const explored = visited.has(`${x},${y}`);
+            tile.className = "tile";
+            tile.textContent = "";
+            if (!explored) {
+              tile.classList.add("unknown");
+              tile.textContent = "·";
+              tile.setAttribute("aria-label", "Terreno sin explorar");
+            } else if (x === player.x && y === player.y) {
+              tile.classList.add("player");
+              tile.textContent = finished ? "🏆" : "🧭";
+              tile.setAttribute("aria-label", finished ? "Explorador y tesoro encontrado" : "Tu posición");
+            } else {
+              const ground = terrain[i];
+              tile.classList.add(ground.className);
+              tile.textContent = ground.icon;
+              tile.setAttribute("aria-label", ground.name);
+            }
+          }
+
+          stepsOutput.textContent = String(steps);
+          exploredOutput.textContent = `${Math.round((visited.size / TOTAL) * 100)}%`;
+          movementButtons.forEach((button) => { button.disabled = finished; });
+        }
+
+        function giveClue() {
+          const dx = treasure.x - player.x;
+          const dy = treasure.y - player.y;
+          const distance = Math.abs(dx) + Math.abs(dy);
+          if (distance === 0) {
+            finished = true;
+            clueTitle.textContent = "¡Tesoro encontrado!";
+            clueText.textContent = `¡Lo lograste en ${steps} pasos! El cofre de la isla ya es tuyo.`;
+            message.textContent = "¡Una gran aventura! Inicia una nueva expedición cuando quieras.";
+            return;
+          }
+
+          const directions = [];
+          if (dy < 0) directions.push("norte");
+          if (dy > 0) directions.push("sur");
+          if (dx < 0) directions.push("oeste");
+          if (dx > 0) directions.push("este");
+          const angle = Math.atan2(dx, -dy) * (180 / Math.PI);
+          compass.style.transform = `rotate(${angle}deg)`;
+          const distanceHint = distance <= 2 ? "¡Estás muy cerca!" : distance <= 5 ? "El tesoro está cerca." : "El tesoro aún está lejos.";
+          clueTitle.textContent = distanceHint;
+          clueText.textContent = `Sigue hacia el ${directions.join(" y el ")}. La brújula señala el camino.`;
+          message.textContent = distance <= 2 ? "La brújula vibra con fuerza." : "Explora casillas nuevas para descubrir más de la isla.";
+        }
+
+        function move(dx, dy) {
+          if (finished) return;
+          const next = { x: player.x + dx, y: player.y + dy };
+          if (next.x < 0 || next.x >= SIZE || next.y < 0 || next.y >= SIZE) {
+            message.textContent = "Has llegado a la orilla de la isla.";
+            return;
+          }
+          player = next;
+          steps += 1;
+          visited.add(key(player));
+          giveClue();
+          render();
+        }
+
+        movementButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            move(Number(button.dataset.dx), Number(button.dataset.dy));
+          });
+        });
+
+        document.addEventListener("keydown", (event) => {
+          const directions = {
+            ArrowUp: [0, -1], w: [0, -1], W: [0, -1],
+            ArrowDown: [0, 1], s: [0, 1], S: [0, 1],
+            ArrowLeft: [-1, 0], a: [-1, 0], A: [-1, 0],
+            ArrowRight: [1, 0], d: [1, 0], D: [1, 0],
+          };
+          const direction = directions[event.key];
+          if (!direction) return;
+          event.preventDefault();
+          move(...direction);
+        });
+
+        document.querySelector("#restart").addEventListener("click", startGame);
+        createMap();
+        startGame();
+      })();
+    </script>
+  </body>
+</html>
