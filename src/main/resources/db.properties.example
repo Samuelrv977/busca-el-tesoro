@@ -1,0 +1,4 @@
+# Plantilla de configuración de base de datos (copiar como db.properties)
+db.url=jdbc:postgresql://<tu-endpoint>.aws.neon.tech/neondb?sslmode=require&channelBinding=require
+db.user=<tu_usuario>
+db.password=<tu_password>
